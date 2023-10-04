@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     private double latitude = 0.0;
     private double longitude = 0.0;
 
-    private List<City> cityList;
     private PreferenceHelper preferenceHelper;
     ActivityMainBinding binding;
 
@@ -64,10 +63,7 @@ public class MainActivity extends AppCompatActivity {
             viewModel.getWeatherInfoWithGeoData(Double.parseDouble(preferenceHelper.getLLat())
                     , Double.parseDouble(preferenceHelper.getLon()), model);
         }
-        if (checkPermission()) {
-            Toast.makeText(this, getString(R.string.permission_already_granted), Toast.LENGTH_SHORT).show();
-
-        } else {
+        if (!checkPermission()) {
             requestPermission();
             Toast.makeText(this, getString(R.string.please_request_permission), Toast.LENGTH_SHORT).show();
         }
@@ -79,7 +75,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String cityName = binding.cityValueET.getText().toString();
-                viewModel.getGeoLocationData(cityName, model);
+                if (cityName.trim().equals("") || cityName == "") {
+                    binding.layoutWeatherBasic.setVisibility(View.GONE);
+                    binding.layoutWeatherAdditional.setVisibility(View.GONE);
+                    Toast.makeText(getApplicationContext(), "Character length should be 3 atleast", Toast.LENGTH_SHORT).show();
+                } else {
+                    viewModel.getGeoLocationData(cityName, model);
+                }
             }
         });
 
@@ -89,7 +91,10 @@ public class MainActivity extends AppCompatActivity {
     private void setLastSelectedCity() {
         //setting last search city name
         String city = preferenceHelper.getLastCity();
-        binding.cityValueET.setSelection(getIndex(cityList, city));
+        if (city.trim().equals("")) {
+        } else {
+            binding.cityValueET.setText(city.toString());
+        }
     }
 
     private void setLiveDataListeners() {
@@ -203,15 +208,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return index;
-    }
-
-    private List<String> convertToListOfCityName(List<City> cityList) {
-
-        List<String> cityNameList = new ArrayList<>();
-        for (int i = -0; i < cityList.size(); i++) {
-            cityNameList.add(cityList.get(i).getName());
-        }
-        return cityNameList;
     }
 
     public static String convertKelvinToCelsius(String kelvin) {
